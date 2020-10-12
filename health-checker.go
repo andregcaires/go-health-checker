@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -83,12 +85,15 @@ func callWebsite(website string) {
 
 	if err != nil {
 		fmt.Println("Error at HTTP request:", err)
+		newLog(website, false)
 	} else {
 
 		if response.StatusCode == 200 {
 			fmt.Println(website, "is OK")
+			newLog(website, true)
 		} else {
 			fmt.Println(website, "is having issues:", response.StatusCode)
+			newLog(website, false)
 		}
 	}
 }
@@ -96,6 +101,16 @@ func callWebsite(website string) {
 func showLogs() {
 
 	fmt.Println("Showing logs...")
+
+	// ReadFile doesn't need to close file
+	file, err := ioutil.ReadFile("log.txt")
+
+	if err != nil {
+		fmt.Println("An error has ocurred while reading log file:", err)
+	} else {
+
+		fmt.Println(string(file))
+	}
 }
 
 func createWebsitesSlice() []string {
@@ -139,4 +154,18 @@ func createWebsitesSliceFromFile() []string {
 	file.Close()
 
 	return websites
+}
+
+func newLog(website string, status bool) {
+
+	file, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+
+	if err != nil {
+		fmt.Println("Error at opening log file:", err)
+	} else {
+
+		file.WriteString(time.Now().Format("02/01/2006 15:04:05") + " - " + website + " - online: " + strconv.FormatBool(status) + "\n")
+	}
+
+	file.Close()
 }
