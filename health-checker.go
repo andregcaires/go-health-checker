@@ -2,22 +2,34 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"time"
 )
+
+const numberOfTries = 5
+const delay = 3
 
 func main() {
 
-	showOptionsMenu()
+	initializeProgram()
+}
 
-	input := getUsetInput()
+func initializeProgram() {
 
-	startSelectedOperation(input)
+	for {
+		showOptionsMenu()
+
+		input := getUsetInput()
+
+		startSelectedOperation(input)
+	}
 }
 
 func showOptionsMenu() {
 
 	fmt.Println("1 - Start monitoring")
-	fmt.Println("1 - Show logs")
+	fmt.Println("2 - Show logs")
 	fmt.Println("9 - Exit program")
 }
 
@@ -47,9 +59,42 @@ func startSelectedOperation(input int) {
 func startMonitoring() {
 
 	fmt.Println("Starting monitoring...")
+
+	websites := createWebsitesSlice()
+
+	for i := 0; i < numberOfTries; i++ {
+		for _, website := range websites {
+
+			callWebsite(website)
+		}
+		if i != (numberOfTries - 1) {
+			time.Sleep(delay * time.Second)
+		}
+	}
+
+}
+
+func callWebsite(website string) {
+
+	response, _ := http.Get(website)
+
+	if response.StatusCode == 200 {
+		fmt.Println(website, "is OK")
+	} else {
+		fmt.Println(website, "is having issues:", response.StatusCode)
+	}
 }
 
 func showLogs() {
 
 	fmt.Println("Showing logs...")
+}
+
+func createWebsitesSlice() []string {
+
+	return []string{
+		"https://www.google.com.br",
+		"https://www.alura.com.br",
+		"https://www.caelum.com.br",
+	}
 }
