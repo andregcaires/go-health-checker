@@ -36,6 +36,7 @@ func startSelectedOperation(input int) {
 	case 2:
 		showLogs()
 	case 9:
+		fmt.Println("Exiting program...")
 		os.Exit(0)
 	default:
 		fmt.Println("Command not found")
