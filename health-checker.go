@@ -1,13 +1,16 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
-const numberOfTries = 5
+const numberOfTries = 3
 const delay = 3
 
 func main() {
@@ -60,11 +63,11 @@ func startMonitoring() {
 
 	fmt.Println("Starting monitoring...")
 
-	websites := createWebsitesSlice()
+	websites := createWebsitesSliceFromFile()
 
 	for i := 0; i < numberOfTries; i++ {
-		for _, website := range websites {
 
+		for _, website := range websites {
 			callWebsite(website)
 		}
 		if i != (numberOfTries - 1) {
@@ -76,12 +79,17 @@ func startMonitoring() {
 
 func callWebsite(website string) {
 
-	response, _ := http.Get(website)
+	response, err := http.Get(website)
 
-	if response.StatusCode == 200 {
-		fmt.Println(website, "is OK")
+	if err != nil {
+		fmt.Println("Error at HTTP request:", err)
 	} else {
-		fmt.Println(website, "is having issues:", response.StatusCode)
+
+		if response.StatusCode == 200 {
+			fmt.Println(website, "is OK")
+		} else {
+			fmt.Println(website, "is having issues:", response.StatusCode)
+		}
 	}
 }
 
@@ -97,4 +105,38 @@ func createWebsitesSlice() []string {
 		"https://www.alura.com.br",
 		"https://www.caelum.com.br",
 	}
+}
+
+func createWebsitesSliceFromFile() []string {
+
+	var websites []string
+
+	file, err := os.Open("websites.txt")
+
+	if err != nil {
+		fmt.Println("Error at opening file:", err)
+
+	} else {
+
+		reader := bufio.NewReader(file)
+
+		for {
+
+			line, err := reader.ReadString('\n')
+
+			line = strings.TrimSpace(line)
+
+			websites = append(websites, line)
+
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				fmt.Println("Error at reading file:", err)
+			}
+		}
+	}
+
+	file.Close()
+
+	return websites
 }
